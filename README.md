@@ -13,7 +13,21 @@ $ docker-compose up --build
 
 ## Usage
 
-JSON: `/:username`
+### Raw JSON data
 
-RSS: `/:username/rss`
+You can fetch recent Tweets as JSON from `http://localhost:3000/:username`.
 
+Example: `https://localhost:3000/amnesty`
+
+### RSS feed
+
+To format the results as an RSS feed, use `http://localhost:3000/:username/rss`.
+
+Optionally, specify a preset "flavour" of RSS using `http://localhost:3000/:username/rss?flavour=slack`. Supported flavours:
+
+- `default`
+  - Title: Tweet text
+  - Description: Tweet text + media URLs as image tags
+- `slack`
+  - Title: Tweet URL
+  - Description: Tweet text + media URLs as links

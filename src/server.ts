@@ -27,6 +27,11 @@ redis.connect().then(() => {
 
   app.get('/:username/rss', async (req, res) => {
     const username = req.params.username;
+    const {
+      flavour = 'default',
+    } = req.query;
+    console.log('flavour', flavour);
+
     let result;
 
     try {
@@ -59,12 +64,17 @@ redis.connect().then(() => {
       const mediaUrls = tweet.legacy.entities.media?.map((media: any) => media.media_url_https) ?? [];
 
       feed.item({
-        title: text,
+        title: flavour === 'slack'
+          ? url
+          : text,
         url: url,
         date,
         description: [
           text,
-          ...mediaUrls.map((url: string) => `${url}\n<img src="${url}" />`),
+          ...mediaUrls.map((url: string) => flavour === 'slack'
+            ? url
+            : `<img src="${url}" />`
+          ),
         ].join('\n'),
       });
     }
