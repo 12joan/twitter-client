@@ -1,27 +1,30 @@
 import express from 'express';
+import { createClient as createRedisClient } from 'redis';
 import { fetchTweets } from './twitter';
 
-const app = express();
+const redis = createRedisClient({ url: process.env.REDIS_URL });
+redis.on('error', console.error);
 
-const port = parseInt(process.env.PORT || '3000', 10);
-const host = process.env.HOST || 'localhost';
+redis.connect().then(() => {
+  const app = express();
 
-app.get('/:username', async (req, res) => {
-  try {
-    const tweets = await fetchTweets(req.params.username);
-    res.json({
-      ok: true,
-      tweets,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      ok: false,
-      error: (err as any).message ?? 'Unknown error',
-    });
-  }
-});
+  const port = parseInt(process.env.PORT || '3000', 10);
+  const host = process.env.HOST || 'localhost';
 
-app.listen(port, host, () => {
-  console.log(`Server listening at http://${host}:${port}`);
+  app.get('/:username', async (req, res) => {
+    try {
+      const result = await fetchTweets(redis as any, req.params.username);
+      res.json(result);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({
+        ok: false,
+        error: (err as any).message ?? 'Unknown error',
+      });
+    }
+  });
+
+  app.listen(port, host, () => {
+    console.log(`Server listening at http://${host}:${port}`);
+  });
 });

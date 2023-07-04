@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import { RedisClientType as RedisClient } from 'redis';
 
 const ACCESS_TOKEN_API = 'https://api.twitter.com/oauth2/token?grant_type=client_credentials';
 const GUEST_TOKEN_API = 'https://api.twitter.com/1.1/guest/activate.json';
@@ -35,14 +36,23 @@ const fetchGuestToken = async (accessToken: string): Promise<string> => {
   return guestToken;
 };
 
+type TUserIdExists = {
+  exists: true;
+  userId: string;
+};
+
+type TUserIdDoesNotExist = {
+  exists: false;
+};
+
+type TUserIdResult = TUserIdExists | TUserIdDoesNotExist;
+
 const fetchUserId = async (
   username: string,
   accessToken: string,
   guestToken: string,
-): Promise<string> => {
-  const {
-    data: { user: { result: { rest_id: userId } } }
-  } = await fetch(userIdAPIForUsername(username), {
+): Promise<TUserIdResult> => {
+  const response = await fetch(userIdAPIForUsername(username), {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${accessToken}`,
@@ -52,20 +62,114 @@ const fetchUserId = async (
     },
   }).then((res) => res.json()) as any;
 
-  return userId;
+  if (!response.data) {
+    throw new Error(JSON.stringify(response, null, 2));
+  }
+
+  if (!response.data.user) {
+    return { exists: false };
+  }
+
+  return {
+    exists: true,
+    userId: response.data.user.result.rest_id,
+  };
 };
 
-export const fetchTweets = async (username: string) => {
-  const accessToken = await fetchAccessToken();
-  const guestToken = await fetchGuestToken(accessToken);
-  const userId = await fetchUserId(username, accessToken, guestToken);
+interface WithCacheOptions<T> {
+  redis: RedisClient;
+  key: string;
+  friendlyLabel?: string;
+  producer: () => Promise<T>;
+  invalidateOnError?: boolean;
+}
 
-  return fetch(tweetsAPIForUserId(userId), {
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'x-guest-token': guestToken,
-      'x-twitter-active-user': 'yes',
-      'Referer': 'https://twitter.com',
-    },
-  }).then(res => res.json());
+const withCache = async <T, U>(
+  {
+    redis,
+    key,
+    friendlyLabel = key,
+    producer,
+    invalidateOnError = false,
+  }: WithCacheOptions<T>,
+  callback: (value: T) => Promise<U>,
+): Promise<U> => {
+  const cachedJSON: string | null = await redis.get(key);
+  const cachedValue: T | null = cachedJSON ? JSON.parse(cachedJSON) : null;
+
+  console.log(`${friendlyLabel}: Cache ${cachedValue ? 'hit' : 'miss'}`);
+
+  if (cachedValue) {
+    try {
+      return await callback(cachedValue);
+    } catch (err) {
+      if (!invalidateOnError) {
+        throw err;
+      }
+
+      console.log(`${friendlyLabel}: Cached value resulted in error, fetching new value`);
+    }
+  }
+
+  const value = await producer();
+  await redis.set(key, JSON.stringify(value));
+  return callback(value);
 };
+
+type TFetchTweetsSuccess = {
+  ok: true;
+  tweets: any;
+};
+
+type TFetchTweetsUserDoesNotExist = {
+  ok: false;
+  error: 'User does not exist';
+};
+
+type TFetchTweetsResult = TFetchTweetsSuccess | TFetchTweetsUserDoesNotExist;
+
+export const fetchTweets = async (redis: RedisClient, username: string): Promise<TFetchTweetsResult> =>
+  withCache({
+    redis,
+    key: 'access-token',
+    friendlyLabel: 'Access token',
+    producer: fetchAccessToken,
+    invalidateOnError: true,
+  }, (accessToken) =>
+    withCache({
+      redis,
+      key: `guest-token-${accessToken}`,
+      friendlyLabel: 'Guest token',
+      producer: () => fetchGuestToken(accessToken),
+      invalidateOnError: true,
+    }, async (guestToken) =>
+      withCache({
+        redis,
+        key: `user-id-${username}`,
+        friendlyLabel: 'User ID',
+        producer: () => fetchUserId(username, accessToken, guestToken),
+      }, async (userIdResult) => {
+        if (!userIdResult.exists) {
+           return { ok: false, error: 'User does not exist' };
+        }
+
+        const data = await fetch(tweetsAPIForUserId(userIdResult.userId), {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'x-guest-token': guestToken,
+            'x-twitter-active-user': 'yes',
+            'Referer': 'https://twitter.com',
+          },
+        }).then(res => res.json());
+
+        return {
+          ok: true,
+          tweets: data.data.user.result.timeline_v2.timeline.instructions
+            .filter((instruction: any) => instruction.type === 'TimelineAddEntries')
+            .flatMap((instruction: any) => instruction.entries)
+            .map((entry: any) => entry?.content?.itemContent?.tweet_results?.result)
+            .filter((tweet: any) => tweet)
+        };
+      }),
+    )
+  );
