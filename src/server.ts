@@ -30,7 +30,6 @@ redis.connect().then(() => {
     const {
       flavour = 'default',
     } = req.query;
-    console.log('flavour', flavour);
 
     let result;
 
