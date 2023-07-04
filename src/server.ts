@@ -59,7 +59,10 @@ redis.connect().then(() => {
         title: url,
         url: url,
         date,
-        description: text + mediaUrls.map((url: string) => `<img src="${url}" />`).join(''),
+        description: [
+          text,
+          ...mediaUrls.map((url: string) => `${url}\n<img src="${url}" />`),
+        ].join('\n'),
       });
     }
 
