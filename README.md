@@ -7,6 +7,7 @@ Based on [this script](https://github.com/zedeus/nitter/issues/919#issuecomment-
 ## Running locally
 
 ```
+$ yarn install # See https://github.com/12joan/twitter-client/issues/6
 $ docker-compose up --build
 ```
 
