@@ -1,7 +1,7 @@
 {
   "name": "twitter-client",
-  "private": true,
   "version": "1.0.0",
+  "license": "Unlicense",
   "scripts": {
     "dev": "nodemon src/server.ts -w src",
     "start": "NODE_ENV=production ts-node src/server.ts"
