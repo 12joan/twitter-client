@@ -46,6 +46,9 @@ redis.connect().then(() => {
       title: username,
       feed_url: req.protocol + '://' + req.get('host') + req.originalUrl,
       site_url: `https://twitter.com/${username}`,
+      custom_namespaces: {
+        atom: 'http://www.w3.org/2005/Atom'
+      }
     });
 
     for (const tweet of result.tweets) {
@@ -56,7 +59,7 @@ redis.connect().then(() => {
       const mediaUrls = tweet.legacy.entities.media?.map((media: any) => media.media_url_https) ?? [];
 
       feed.item({
-        title: url,
+        title: text,
         url: url,
         date,
         description: [
