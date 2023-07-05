@@ -68,6 +68,7 @@ redis.connect().then(() => {
           : text,
         url: url,
         date,
+        custom_elements: [{ 'sdc:creator': username }],
         description: [
           text,
           ...mediaUrls.map((url: string) => flavour === 'slack'
