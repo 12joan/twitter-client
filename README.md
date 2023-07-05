@@ -28,6 +28,10 @@ services:
 
 Start using `docker-compose up -d` and access at http://localhost:3000/.
 
+## Deployment without Docker
+
+- [Red Hat Enterprise Linux](https://github.com/12joan/twitter-client/wiki/Install:NoDocker:Rocky-Linux-8.6)
+
 ## Running locally
 
 ```
