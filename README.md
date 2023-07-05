@@ -4,6 +4,30 @@ A temporary Twitter client for fetching recent tweets for use while Twitter is c
 
 Based on [this script](https://github.com/zedeus/nitter/issues/919#issuecomment-1619263153) by [polkaulfield](https://github.com/polkaulfield).
 
+## Deployment with Docker
+
+Create a file `docker-compose.yml` with the following content:
+
+```yml
+version: '3'
+
+services:
+  web:
+    image: ghcr.io/12joan/twitter-client:production
+    environment:
+      REDIS_URL: redis://redis:6379
+      HOST: '0.0.0.0'
+    ports:
+      - 3000:3000
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:latest
+```
+
+Start using `docker-compose up -d` and access at http://localhost:3000/.
+
 ## Running locally
 
 ```
