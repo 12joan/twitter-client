@@ -2,6 +2,7 @@ import express from 'express';
 import { createClient as createRedisClient } from 'redis';
 import RSS from 'rss';
 import { fetchTweets } from './twitter';
+import fs from 'fs';
 
 const redis = createRedisClient({ url: process.env.REDIS_URL });
 redis.on('error', console.error);
@@ -56,26 +57,7 @@ redis.connect().then(() => {
     });
 
     for (const tweet of result.tweets) {
-      const id = tweet.rest_id;
-      const url = `https://twitter.com/${username}/status/${id}`;
-      const date = tweet.legacy.created_at;
-      const text = tweet.legacy.full_text;
-      const mediaUrls = tweet.legacy.entities.media?.map((media: any) => media.media_url_https) ?? [];
-
-      feed.item({
-        title: flavour === 'slack'
-          ? url
-          : text,
-        url: url,
-        date,
-        description: [
-          text,
-          ...mediaUrls.map((url: string) => flavour === 'slack'
-            ? url
-            : `<img src="${url}" />`
-          ),
-        ].join('\n'),
-      });
+      eval(fs.readFileSync('./src/feed_item_' + flavour + '.ts', 'utf-8'));
     }
 
     res.set('Content-Type', 'application/rss+xml');
