@@ -162,9 +162,6 @@ export const fetchTweets = async (redis: RedisClient, username: string): Promise
           },
         }).then(res => res.json());
 
-//const dumpstring = JSON.stringify(data, null, 2);
-//console.log(dumpstring);
-
         return {
           ok: true,
           tweets: data.data.user.result.timeline_v2.timeline.instructions
