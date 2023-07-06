@@ -8,12 +8,18 @@ const userIdAPIForUsername = (username: string) => `https://api.twitter.com/grap
 
 const tweetsAPIForUserId = (userId: string) => `https://api.twitter.com/graphql/pNl8WjKAvaegIoVH--FuoQ/UserTweetsAndReplies?variables=%7B%22userId%22%3A%22${userId}%22,%22count%22%3A40,%22includePromotedContent%22%3Atrue,%22withCommunity%22%3Atrue,%22withSuperFollowsUserFields%22%3Atrue,%22withDownvotePerspective%22%3Afalse,%22withReactionsMetadata%22%3Afalse,%22withReactionsPerspective%22%3Afalse,%22withSuperFollowsTweetFields%22%3Atrue,%22withVoice%22%3Atrue,%22withV2Timeline%22%3Atrue%7D&features=%7B%22responsive_web_twitter_blue_verified_badge_is_enabled%22%3Atrue,%22responsive_web_graphql_exclude_directive_enabled%22%3Atrue,%22verified_phone_label_enabled%22%3Afalse,%22responsive_web_graphql_timeline_navigation_enabled%22%3Atrue,%22responsive_web_graphql_skip_user_profile_image_extensions_enabled%22%3Afalse,%22tweetypie_unmention_optimization_enabled%22%3Atrue,%22vibe_api_enabled%22%3Atrue,%22responsive_web_edit_tweet_api_enabled%22%3Atrue,%22graphql_is_translatable_rweb_tweet_is_translatable_enabled%22%3Atrue,%22view_counts_everywhere_api_enabled%22%3Atrue,%22longform_notetweets_consumption_enabled%22%3Atrue,%22tweet_awards_web_tipping_enabled%22%3Afalse,%22freedom_of_speech_not_reach_fetch_enabled%22%3Afalse,%22standardized_nudges_misinfo%22%3Atrue,%22tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled%22%3Afalse,%22interactive_text_enabled%22%3Atrue,%22responsive_web_text_conversations_enabled%22%3Afalse,%22longform_notetweets_richtext_consumption_enabled%22%3Afalse,%22responsive_web_enhance_cards_enabled%22%3Afalse%7D`;
 
-const CLIENT_CREDENTIALS = [
-  ['CjulERsDeqhhjSme66ECg', 'IQWdVyqFxghAtURHGeGiWAsmCAGmdW3WmbEx6Hck'],
-].map(([username, password]) => Buffer.from(`${username}:${password}`).toString('base64'));
+const CLIENT_CREDENTIALS: [string, string, string][] = [
+  // ['IQKbtAYlXLripLGPWd0HUA', 'GgDYlkSvaPxGxC4X8liwpUoqKwwr3lCADbz8A7ADU', 'iPhone'],
+  // ['3nVuSoBZnx6U4vzUxf5w', 'Bcs59EFbbsdF6Sl9Ng71smgStWEGwXXKSjYvPVt7qys', 'Android'],
+  ['CjulERsDeqhhjSme66ECg', 'IQWdVyqFxghAtURHGeGiWAsmCAGmdW3WmbEx6Hck', 'iPad'],
+  // ['3rJOl1ODzm9yZy63FACdg', '5jPoQ5kQvMJFDYRNE8bQ4rHuds4xJqhvgNJM4awaE8', 'Mac'],
+];
 
 const fetchAccessToken = async (): Promise<string> => {
-  const [credentials] = CLIENT_CREDENTIALS;
+  // pick one randomly
+  const [username, password, client] = CLIENT_CREDENTIALS[Math.floor(Math.random() * CLIENT_CREDENTIALS.length)];
+  const credentials = Buffer.from(`${username}:${password}`).toString('base64');
+  console.log(`Using crednetial: ${client}`)
 
   const { access_token: accessToken } = await fetch(ACCESS_TOKEN_API, {
     method: 'POST',
