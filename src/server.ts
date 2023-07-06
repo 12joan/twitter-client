@@ -56,27 +56,29 @@ redis.connect().then(() => {
     });
 
     for (const tweet of result.tweets) {
-      const id = tweet.rest_id;
-      const url = `https://twitter.com/${username}/status/${id}`;
-      const date = tweet.legacy.created_at;
-      const text = tweet.legacy.full_text;
-      const mediaUrls = tweet.legacy.entities.media?.map((media: any) => media.media_url_https) ?? [];
+      if( username === tweet.core.user_results.result.legacy.screen_name ) {
+        const id = tweet.rest_id;
+        const url = `https://twitter.com/${username}/status/${id}`;
+        const date = tweet.legacy.created_at;
+        const text = tweet.legacy.full_text;
+        const mediaUrls = tweet.legacy.entities.media?.map((media: any) => media.media_url_https) ?? [];
 
-      feed.item({
-        title: flavour === 'slack'
-          ? url
-          : text,
-        url: url,
-        date,
-        custom_elements: [{ 'dc:creator': username }],
-        description: [
-          text,
-          ...mediaUrls.map((url: string) => flavour === 'slack'
+        feed.item({
+          title: flavour === 'slack'
             ? url
-            : `<img src="${url}" />`
-          ),
-        ].join('\n'),
-      });
+            : text,
+          url: url,
+          date,
+          custom_elements: [{ 'dc:creator': tweet.core.user_results.result.legacy.screen_name }],
+          description: [
+            text,
+            ...mediaUrls.map((url: string) => flavour === 'slack'
+              ? url
+              : `<img src="${url}" />`
+            ),
+          ].join('\n'),
+        });
+      }
     }
 
     res.set('Content-Type', 'application/rss+xml');
