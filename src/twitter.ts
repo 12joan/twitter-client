@@ -162,6 +162,9 @@ export const fetchTweets = async (redis: RedisClient, username: string): Promise
           },
         }).then(res => res.json());
 
+//const dumpstring = JSON.stringify(data, null, 2);
+//console.log(dumpstring);
+
         return {
           ok: true,
           tweets: data.data.user.result.timeline_v2.timeline.instructions
@@ -169,6 +172,9 @@ export const fetchTweets = async (redis: RedisClient, username: string): Promise
             .flatMap((instruction: any) => instruction.entries)
             .map((entry: any) => entry?.content?.itemContent?.tweet_results?.result)
             .filter((tweet: any) => tweet)
+            //only accept tweets whose screen_name actually matches :username
+            //  it may be a bug or it may be advertising, but incorrect tweets have been showing up on this API endpoint
+            .filter((tweet: any) => tweet.core.user_results.result.legacy.screen_name === username)
         };
       }),
     )
