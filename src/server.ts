@@ -35,7 +35,7 @@ redis.connect().then(() => {
     const username = req.params.username;
     const { flavour = 'default' } = req.query;
     let result;
-
+g
     try {
       result = await fetchTweets(redis as any, username);
     } catch (err) {
