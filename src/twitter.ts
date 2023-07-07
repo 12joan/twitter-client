@@ -19,7 +19,7 @@ const fetchAccessToken = async (): Promise<string> => {
   // pick one randomly
   const [username, password, client] = CLIENT_CREDENTIALS[Math.floor(Math.random() * CLIENT_CREDENTIALS.length)];
   const credentials = Buffer.from(`${username}:${password}`).toString('base64');
-  console.log(`Using crednetial: ${client}`)
+  console.log(`Using credentials: ${client}`)
 
   const { access_token: accessToken } = await fetch(ACCESS_TOKEN_API, {
     method: 'POST',
