@@ -163,7 +163,7 @@ export const fetchTweets = async (redis: RedisClient, username: string): Promise
            * a bug or it may be advertising, but incorrect Tweets have been
            * showing up on this API endpoint.
            */
-          .filter((tweet: any) => tweet.core.user_results.result.legacy.screen_name === username)
+          .filter((tweet: any) => tweet.core.user_results.result.legacy.screen_name.toUpperCase() === username.toUpperCase())
       };
     }),
   );
