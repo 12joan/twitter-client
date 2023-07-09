@@ -34,9 +34,23 @@ Start using `docker-compose up -d` and access at http://localhost:3000/.
 
 ## Running locally
 
+To start the server,
+
 ```
 $ yarn install # See https://github.com/12joan/twitter-client/issues/6
 $ docker-compose up --build
+```
+
+To check types on file change,
+
+```
+$ yarn typecheck:watch
+```
+
+To fix code formatting,
+
+```
+$ yarn lint --fix
 ```
 
 ## Usage
