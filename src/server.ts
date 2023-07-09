@@ -3,15 +3,20 @@ import { createClient as createRedisClient } from 'redis';
 import RSS from 'rss';
 import { fetchTweets } from './twitter';
 
+// Initialize the Redis client with a URL from environment variables.
 const redis = createRedisClient({ url: process.env.REDIS_URL });
+
+// Catch any errors that occur with the Redis client.
 redis.on('error', console.error);
 
 redis.connect().then(() => {
   const app = express();
 
+  // Set up the port and host for the express app. Use environment variables if available, otherwise use defaults.
   const port = parseInt(process.env.PORT || '3000', 10);
   const host = process.env.HOST || 'localhost';
 
+  // Handle GET requests to '/:username', fetching and returning tweets from the given username.
   app.get('/:username', async (req, res) => {
     try {
       const result = await fetchTweets(redis as any, req.params.username);
@@ -25,12 +30,10 @@ redis.connect().then(() => {
     }
   });
 
+  // Handle GET requests to '/:username/rss', returning tweets from the given username in RSS format.
   app.get('/:username/rss', async (req, res) => {
     const username = req.params.username;
-    const {
-      flavour = 'default',
-    } = req.query;
-
+    const { flavour = 'default' } = req.query;
     let result;
 
     try {
@@ -46,6 +49,7 @@ redis.connect().then(() => {
       return;
     }
 
+    // Create a new RSS feed with metadata.
     const feed = new RSS({
       title: username,
       feed_url: req.protocol + '://' + req.get('host') + req.originalUrl,
@@ -55,6 +59,7 @@ redis.connect().then(() => {
       }
     });
 
+    // For each tweet, add it to the RSS feed with the tweet's data.
     for (const tweet of result.tweets) {
       const id = tweet.rest_id;
       const url = `https://twitter.com/${username}/status/${id}`;
@@ -79,10 +84,12 @@ redis.connect().then(() => {
       });
     }
 
+    // Set the content type to 'application/rss+xml' to indicate that the response is an RSS feed.
     res.set('Content-Type', 'application/rss+xml');
     res.send(feed.xml());
   });
 
+  // Start the express server, logging once the server is ready.
   app.listen(port, host, () => {
     console.log(`Server listening at http://${host}:${port}`);
   });
