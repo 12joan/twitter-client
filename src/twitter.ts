@@ -178,17 +178,17 @@ export const fetchTweets = async (redis: RedisClient, username: string): Promise
       return {
         ok: true,
         tweets: data.data.user.result.timeline_v2.timeline.instructions
-          .filter((instruction: any) => instruction.type === 'TimelineAddEntries') 
+          .filter((instruction: any) => instruction.type === 'TimelineAddEntries')
           .flatMap((instruction: any) => instruction.entries)
           .map((entry: any) => entry?.content?.itemContent?.tweet_results?.result)
-          .filter((tweet: any) => tweet) 
+          .filter((tweet: any) => tweet)
           /**
            * Only accept Tweets whose screen_name matches username. It may be
            * a bug or it may be advertising, but incorrect Tweets have been
            * showing up on this API endpoint.
            */
-          .filter((tweet: any) => tweet.core.user_results.result.legacy.screen_name === username) 
+          .filter((tweet: any) => tweet.core.user_results.result.legacy.screen_name.toUpperCase() === username.toUpperCase())
       };
     }),
-  )
+  );
 };
