@@ -89,11 +89,11 @@ const fetchUserId = async (
 
 // Defines an interface for caching options
 interface WithCacheOptions<T> {
-  redis: RedisClient;                 
-  key: string;                       
-  friendlyLabel?: string;            
-  producer: () => Promise<T>;        
-  invalidateOnError?: boolean;       
+redis: RedisClient;                 
+key: string;                       
+friendlyLabel?: string;            
+producer: () => Promise<T>;        
+invalidateOnError?: boolean;       
 }
 
 // A higher-order function that handles caching of data using a Redis client
@@ -126,7 +126,7 @@ const withCache = async <T, U>(
         throw err;
       }
 
-      console.log(`${friendlyLabel}: Cached value resulted in error, fetching new value`); 
+    console.log(`${friendlyLabel}: Cached value resulted in error, fetching new value`); 
     }
   }
   // Refresh cache and retry callback
@@ -190,5 +190,5 @@ export const fetchTweets = async (redis: RedisClient, username: string): Promise
           .filter((tweet: any) => tweet.core.user_results.result.legacy.screen_name === username) 
       };
     }),
-  );
-}
+  )
+};
