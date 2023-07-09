@@ -3,17 +3,8 @@ name: On push
 on: push
 
 jobs:
-  ci:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-    - run: yarn install --frozen-lockfile
-    - run: yarn lint
-
-  deploy_alpha:
-    needs: ci
-    if: ${{ github.ref == 'refs/heads/main' }}
+  deploy_production:
+    if: ${{ github.ref == 'refs/heads/deployment' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -25,4 +16,4 @@ jobs:
         password: ${{ secrets.REGISTRY_PASSWORD }}
         repository: ${{ secrets.REGISTRY_REPO }}
         registry: ${{ secrets.REGISTRY_URL }}
-        tag: alpha
+        tag: production
