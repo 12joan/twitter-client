@@ -99,11 +99,11 @@ interface WithCacheOptions<T> {
 // A higher-order function that handles caching of data using a Redis client
 const withCache = async <T, U>(
   {
-    redis,                          
-    key,                             
-    friendlyLabel = key,           
-    producer,                       
-    invalidateOnError = false,       
+    redis,
+    key,
+    friendlyLabel = key,
+    producer,
+    invalidateOnError = false,
   }: WithCacheOptions<T>,
   callback: (value: T) => Promise<U>,
 ): Promise<U> => {
