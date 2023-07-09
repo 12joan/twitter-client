@@ -108,7 +108,7 @@ const withCache = async <T, U>(
   callback: (value: T) => Promise<U>,
 ): Promise<U> => {
   const cachedJSON: string | null = await redis.get(key);
-  const cachedValue: T | null = cachedJSON ? JSON.parse(cachedJSON) : null; 
+  const cachedValue: T | null = cachedJSON ? JSON.parse(cachedJSON) : null;
 
   console.log(`${friendlyLabel}: Cache ${cachedValue ? 'hit' : 'miss'}`); 
 
