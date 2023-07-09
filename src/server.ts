@@ -1,95 +1,83 @@
 import express from 'express';
 import { createClient as createRedisClient } from 'redis';
-import RSS from 'rss';
-import { fetchTweets } from './twitter';
+import { getTweetsForUsername } from './twitter';
+import { TTweet } from './twitter-api';
+import { createUserRSSFeed, RSS_FLAVOURS, TRSSFlavour } from './rss';
 
-// Initialize the Redis client with a URL from environment variables.
+/**
+ * Initialize the Redis server. The URL should be specified in the environment
+ * variable REDIS_URL.
+ */
 const redis = createRedisClient({ url: process.env.REDIS_URL });
-
-// Catch any errors that occur with the Redis client.
 redis.on('error', console.error);
+
+/**
+ * Express server config. Customise the host and port using the environment
+ * variables HOST and PORT.
+ */
+const port = parseInt(process.env.PORT || '3000', 10);
+const host = process.env.HOST || 'localhost';
 
 redis.connect().then(() => {
   const app = express();
 
-  // Set up the port and host for the express app. Use environment variables if available, otherwise use defaults.
-  const port = parseInt(process.env.PORT || '3000', 10);
-  const host = process.env.HOST || 'localhost';
-
-  // Handle GET requests to '/:username', fetching and returning tweets from the given username.
-  app.get('/:username', async (req, res) => {
-    try {
-      const result = await fetchTweets(redis as any, req.params.username);
-      res.json(result);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({
-        ok: false,
-        error: (err as any).message ?? 'Unknown error',
-      });
-    }
-  });
-
-  // Handle GET requests to '/:username/rss', returning tweets from the given username in RSS format.
-  app.get('/:username/rss', async (req, res) => {
-    const username = req.params.username;
-    const { flavour = 'default' } = req.query;
+  // Middleware. Get Tweets for routes starting with /:username.
+  app.use('/:username', async (req, res, next) => {
     let result;
 
     try {
-      result = await fetchTweets(redis as any, username);
+      result = await getTweetsForUsername({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        redis: redis as any,
+        username: req.params.username,
+      });
     } catch (err) {
       console.error(err);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       res.status(500).send((err as any).message ?? 'Unknown error');
       return;
     }
 
     if (!result.ok) {
-      res.status(404).send(result.error);
+      res
+        .status(result.error === 'user-id-does-not-exist-error' ? 404 : 500)
+        .send(result.error);
       return;
     }
 
-    // Create a new RSS feed with metadata.
-    const feed = new RSS({
-      title: username,
-      feed_url: req.protocol + '://' + req.get('host') + req.originalUrl,
-      site_url: `https://twitter.com/${username}`,
-      custom_namespaces: {
-        atom: 'http://www.w3.org/2005/Atom'
-      }
-    });
+    res.locals.tweets = result.data;
+    next();
+  });
 
-    // For each tweet, add it to the RSS feed with the tweet's data.
-    for (const tweet of result.tweets) {
-      const id = tweet.rest_id;
-      const url = `https://twitter.com/${username}/status/${id}`;
-      const date = tweet.legacy.created_at;
-      const text = tweet.legacy.full_text;
-      const mediaUrls = tweet.legacy.entities.media?.map((media: any) => media.media_url_https) ?? [];
+  // JSON endpoint
+  app.get('/:username', async (_req, res) => {
+    res.send(res.locals.tweets);
+  });
 
-      feed.item({
-        title: flavour === 'slack'
-          ? url
-          : text,
-        url: url,
-        date,
-        custom_elements: [{ 'dc:creator': username }],
-        description: [
-          text,
-          ...mediaUrls.map((url: string) => flavour === 'slack'
-            ? url
-            : `<img src="${url}" />`
-          ),
-        ].join('\n'),
-      });
+  // RSS endpoint
+  app.get('/:username/rss', async (req, res) => {
+    const { username } = req.params;
+    const { flavour = 'default' } = req.query;
+    const tweets = res.locals.tweets as TTweet[];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (!RSS_FLAVOURS.includes(flavour as any)) {
+      res.status(400).send(`Invalid flavour: ${flavour}`);
+      return;
     }
 
-    // Set the content type to 'application/rss+xml' to indicate that the response is an RSS feed.
+    const feed = createUserRSSFeed({
+      username,
+      feedUrl: req.protocol + '://' + req.get('host') + req.originalUrl,
+      tweets,
+      flavour: flavour as TRSSFlavour,
+    });
+
     res.set('Content-Type', 'application/rss+xml');
     res.send(feed.xml());
   });
 
-  // Start the express server, logging once the server is ready.
+  // Start the Express server
   app.listen(port, host, () => {
     console.log(`Server listening at http://${host}:${port}`);
   });

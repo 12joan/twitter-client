@@ -4,7 +4,10 @@
   "license": "Unlicense",
   "scripts": {
     "dev": "nodemon src/server.ts -w src",
-    "start": "NODE_ENV=production ts-node src/server.ts"
+    "start": "NODE_ENV=production ts-node src/server.ts",
+    "typecheck": "yarn tsc --noEmit",
+    "typecheck:watch": "yarn typecheck --incremental --watch",
+    "lint": "eslint src --max-warnings 0"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -19,6 +22,12 @@
     "@types/node": "^18.11.18",
     "@types/node-fetch": "^2.6.4",
     "@types/rss": "^0.0.30",
-    "nodemon": "^2.0.20"
+    "@typescript-eslint/eslint-plugin": "^5.61.0",
+    "@typescript-eslint/parser": "^5.61.0",
+    "eslint": "^8.44.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "nodemon": "^2.0.20",
+    "prettier": "^2.8.8"
   }
 }
