@@ -32,6 +32,27 @@ Start using `docker-compose up -d` and access at http://localhost:3000/.
 
 - [Red Hat Enterprise Linux](https://github.com/12joan/twitter-client/wiki/Install:NoDocker:Rocky-Linux-8.6)
 
+## Usage
+
+### Raw JSON data
+
+You can fetch recent Tweets as JSON from `http://localhost:3000/:username`.
+
+Example: `http://localhost:3000/amnesty`
+
+### RSS feed
+
+To format the results as an RSS feed, use `http://localhost:3000/:username/rss`.
+
+Optionally, specify a preset "flavour" of RSS using `http://localhost:3000/:username/rss?flavour=slack`. Supported flavours:
+
+- `default`
+  - Title: Tweet text
+  - Description: Tweet text + media URLs as image tags
+- `slack`
+  - Title: Tweet URL
+  - Description: Tweet text + media URLs as links
+
 ## Running locally
 
 To start the server,
@@ -52,24 +73,3 @@ To fix code formatting,
 ```
 $ yarn lint --fix
 ```
-
-## Usage
-
-### Raw JSON data
-
-You can fetch recent Tweets as JSON from `http://localhost:3000/:username`.
-
-Example: `https://localhost:3000/amnesty`
-
-### RSS feed
-
-To format the results as an RSS feed, use `http://localhost:3000/:username/rss`.
-
-Optionally, specify a preset "flavour" of RSS using `http://localhost:3000/:username/rss?flavour=slack`. Supported flavours:
-
-- `default`
-  - Title: Tweet text
-  - Description: Tweet text + media URLs as image tags
-- `slack`
-  - Title: Tweet URL
-  - Description: Tweet text + media URLs as links
