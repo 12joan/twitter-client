@@ -126,7 +126,7 @@ const withCache = async <T, U>(
         throw err;
       }
 
-    console.log(`${friendlyLabel}: Cached value resulted in error, fetching new value`); 
+      console.log(`${friendlyLabel}: Cached value resulted in error, fetching new value`);
     }
   }
   // Refresh cache and retry callback
