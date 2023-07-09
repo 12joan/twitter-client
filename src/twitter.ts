@@ -131,7 +131,7 @@ const withCache = async <T, U>(
   }
   // Refresh cache and retry callback
   const value = await producer();
-  await redis.set(key, JSON.stringify(value)); 
+  await redis.set(key, JSON.stringify(value));
   return callback(value); 
 };
 
