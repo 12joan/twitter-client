@@ -8,6 +8,7 @@ export interface FetchGuestTokenOptions {
   accessToken: string;
 }
 
+// Fetch a guest token for the given access token
 export const fetchGuestToken = async ({
   accessToken,
 }: FetchGuestTokenOptions): Promise<TEither<string, TGuestTokenError>> => {

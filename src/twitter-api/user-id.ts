@@ -11,6 +11,7 @@ export interface FetchUserIdOptions {
   username: string;
 }
 
+// Fetch the user ID for the given username
 export const fetchUserId = async ({
   accessToken,
   guestToken,
@@ -29,8 +30,7 @@ export const fetchUserId = async ({
       },
     }).then((res) => res.json())) as TUserIdResponse;
 
-    console.log(response);
-
+    // Handle unexpected response
     if (!response.data) {
       throw new Error(JSON.stringify(response, null, 2));
     }
@@ -39,6 +39,7 @@ export const fetchUserId = async ({
     return { ok: false, error: 'user-id-unknown-error' };
   }
 
+  // The `data` field is empty if the user does not exist
   if ('user' in response.data) {
     return { ok: true, data: response.data.user.result.rest_id };
   }

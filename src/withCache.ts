@@ -12,6 +12,15 @@ export interface WithCacheOptions<T, U> {
   shouldInvalidateOnResult?: (result: U) => boolean;
 }
 
+/**
+ * A higher-order function that performs a computation with a cached value,
+ * fetching the value if necessary.
+ *
+ * If the cached value exists, it is passed to the callback. If the callback
+ * produces an error, an invalid result, or if the cached value does not exist,
+ * then the value is fetched, cached, and passed to the callback (possibly for
+ * a second time).
+ */
 export const withCache = async <T, U>(
   {
     redis,
@@ -30,6 +39,7 @@ export const withCache = async <T, U>(
 
   console.log(`${friendlyLabel}: Cache ${cachedValue ? 'hit' : 'miss'}`);
 
+  // Try with the cached value
   if (cachedValue) {
     let result: U | undefined = undefined;
 
@@ -56,6 +66,7 @@ export const withCache = async <T, U>(
     }
   }
 
+  // Re-fetch the value and try again
   const value = await producer();
   await redis.set(prefixedKey, JSON.stringify(value));
   return callback(value);

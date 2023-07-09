@@ -16,6 +16,7 @@ export interface FetchUserTweetsOptions {
   username: string; // Used for filtering Tweets
 }
 
+// Fetch the recent Tweets for the given user
 export const fetchUserTweets = async ({
   accessToken,
   guestToken,
