@@ -4,6 +4,8 @@ A temporary Twitter client for fetching recent tweets for use while Twitter is c
 
 Based on [this script](https://github.com/zedeus/nitter/issues/919#issuecomment-1619263153) by [polkaulfield](https://github.com/polkaulfield).
 
+**[🚀 Publish new version](https://github.com/12joan/twitter-client/compare/deployment...main?expand=1&title=Deploy%20production&body=Merging%20this%20PR%20will%20trigger%20a%20deployment%20to%20production)** - Create a PR that will push the contents of `main` to the Docker registry when merged
+
 ## Deployment with Docker
 
 Create a file `docker-compose.yml` with the following content:
@@ -27,6 +29,8 @@ services:
 ```
 
 Start using `docker-compose up -d` and access at http://localhost:3000/.
+
+The `production` tag is updated when the `deployment` branch receives new commits. You can also try out the lastest version on `main` using the `alpha` tag. Anyone can update the `deployment` branch by clicking the **Publish new version** link at the top of this README.
 
 ## Deployment without Docker
 
