@@ -1,8 +1,8 @@
 import express from 'express';
 import { createClient as createRedisClient } from 'redis';
-import RSS from 'rss';
 import { getTweetsForUsername } from './twitter';
 import { TTweet } from './twitter-api';
+import { createUserRSSFeed, RSS_FLAVOURS, TRSSFlavour } from './rss';
 
 /**
  * Initialize the Redis server. The URL should be specified in the environment
@@ -60,39 +60,18 @@ redis.connect().then(() => {
     const { flavour = 'default' } = req.query;
     const tweets = res.locals.tweets as TTweet[];
 
-    // Feed metadata
-    const feed = new RSS({
-      title: username,
-      feed_url: req.protocol + '://' + req.get('host') + req.originalUrl,
-      site_url: `https://twitter.com/${username}`,
-      custom_namespaces: {
-        atom: 'http://www.w3.org/2005/Atom',
-      },
-    });
-
-    // For each tweet, add an item to the feed
-    for (const tweet of tweets) {
-      const id = tweet.rest_id;
-      const url = `https://twitter.com/${username}/status/${id}`;
-      const date = tweet.legacy.created_at;
-      const text = tweet.legacy.full_text;
-      const mediaUrls =
-        tweet.legacy.entities.media?.map((media) => media.media_url_https) ??
-        [];
-
-      feed.item({
-        title: flavour === 'slack' ? url : text,
-        url: url,
-        date,
-        custom_elements: [{ 'dc:creator': username }],
-        description: [
-          text,
-          ...mediaUrls.map((url: string) =>
-            flavour === 'slack' ? url : `<img src="${url}" />`
-          ),
-        ].join('\n'),
-      });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (!RSS_FLAVOURS.includes(flavour as any)) {
+      res.status(400).send(`Invalid flavour: ${flavour}`);
+      return;
     }
+
+    const feed = createUserRSSFeed({
+      username,
+      feedUrl: req.protocol + '://' + req.get('host') + req.originalUrl,
+      tweets,
+      flavour: flavour as TRSSFlavour,
+    });
 
     res.set('Content-Type', 'application/rss+xml');
     res.send(feed.xml());
