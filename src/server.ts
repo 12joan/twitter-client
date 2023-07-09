@@ -12,36 +12,14 @@ redis.connect().then(() => {
   const port = parseInt(process.env.PORT || '3000', 10);
   const host = process.env.HOST || 'localhost';
 
-  app.get('/:username', async (req, res) => {
-    try {
-      const result = await getTweetsForUsername({
-        redis: redis as any,
-        username: req.params.username
-      });
-
-      res.json(result);
-    } catch (err) {
-      console.error(err);
-
-      res.status(500).json({
-        ok: false,
-        error: (err as any).message ?? 'Unknown error',
-      });
-    }
-  });
-
-  app.get('/:username/rss', async (req, res) => {
-    const username = req.params.username;
-    const {
-      flavour = 'default',
-    } = req.query;
-
+  // Get tweets for routes starting with /:username
+  app.use('/:username', async (req, res, next) => {
     let result;
 
     try {
       result = await getTweetsForUsername({
         redis: redis as any,
-        username,
+        username: req.params.username,
       });
 
     } catch (err) {
@@ -51,9 +29,26 @@ redis.connect().then(() => {
     }
 
     if (!result.ok) {
-      res.status(404).send(result.error);
+      res.status(
+        result.error === 'user-id-does-not-exist-error'
+          ? 404
+          : 500
+      ).send(result.error);
       return;
     }
+
+    res.locals.tweets = result.data;
+    next();
+  });
+
+  app.get('/:username', async (_req, res) => {
+    res.send(res.locals.tweets);
+  });
+
+  app.get('/:username/rss', async (req, res) => {
+    const { username } = req.params;
+    const { flavour = 'default' } = req.query;
+    const { tweets } = res.locals;
 
     const feed = new RSS({
       title: username,
@@ -64,7 +59,7 @@ redis.connect().then(() => {
       }
     });
 
-    for (const tweet of result.tweets) {
+    for (const tweet of tweets) {
       const id = tweet.rest_id;
       const url = `https://twitter.com/${username}/status/${id}`;
       const date = tweet.legacy.created_at;

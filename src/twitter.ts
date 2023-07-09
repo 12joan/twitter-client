@@ -1,3 +1,4 @@
+import { TEither } from './either';
 import { RedisClientType as RedisClient } from 'redis';
 import { withCache } from './withCache';
 import {
@@ -5,19 +6,15 @@ import {
   fetchGuestToken,
   fetchUserId,
   fetchUserTweets,
+  TGuestTokenError,
+  TUserIdError,
+  TUserTweetsError,
 } from './twitter-api';
 
-type TFetchTweetsSuccess = {
-  ok: true;
-  tweets: any;
-};
-
-type TFetchTweetsUserDoesNotExist = {
-  ok: false;
-  error: 'User does not exist';
-};
-
-type TFetchTweetsResult = TFetchTweetsSuccess | TFetchTweetsUserDoesNotExist;
+export type TGetTweetsForUsernameError =
+  | TGuestTokenError
+  | TUserIdError
+  | TUserTweetsError;
 
 export interface GetTweetsForUsernameOptions {
   redis: RedisClient;
@@ -27,33 +24,41 @@ export interface GetTweetsForUsernameOptions {
 export const getTweetsForUsername = async ({
   redis,
   username,
-}: GetTweetsForUsernameOptions): Promise<TFetchTweetsResult> => {
+}: GetTweetsForUsernameOptions): Promise<TEither<any[], TGetTweetsForUsernameError>> => {
   const accessToken = getAccessToken();
+
   return withCache({
     redis,
     key: `guest-token-${accessToken}`,
     friendlyLabel: 'Guest token',
     producer: () => fetchGuestToken({ accessToken }),
     invalidateOnError: true,
-  }, async (guestToken) =>
-    withCache({
+    shouldInvalidateOnResult: ({ ok }) => !ok,
+  }, async (guestTokenResult) => {
+    if (!guestTokenResult.ok) {
+      return guestTokenResult;
+    }
+
+    const guestToken = guestTokenResult.data;
+
+    return withCache({
       redis,
       key: `user-id-${username}`,
       friendlyLabel: 'User ID',
       producer: () => fetchUserId({ accessToken, guestToken, username }),
     }, async (userIdResult) => {
-      if (!userIdResult.exists) {
-         return { ok: false, error: 'User does not exist' };
+      if (!userIdResult.ok) {
+        return userIdResult;
       };
 
-      const tweets = await fetchUserTweets({
+      const userId = userIdResult.data;
+
+      return fetchUserTweets({
         accessToken,
         guestToken,
-        userId: userIdResult.userId,
+        userId,
         username,
       });
-
-      return { ok: true, tweets };
-    }),
-  );
-}
+    });
+  });
+};
