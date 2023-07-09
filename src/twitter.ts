@@ -110,7 +110,7 @@ const withCache = async <T, U>(
   const cachedJSON: string | null = await redis.get(key);
   const cachedValue: T | null = cachedJSON ? JSON.parse(cachedJSON) : null;
 
-  console.log(`${friendlyLabel}: Cache ${cachedValue ? 'hit' : 'miss'}`); 
+  console.log(`${friendlyLabel}: Cache ${cachedValue ? 'hit' : 'miss'}`);
 
   /**
    * If a cached value exists, attempt the callback with the cached value.
