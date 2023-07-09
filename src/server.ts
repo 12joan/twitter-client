@@ -1,7 +1,7 @@
 import express from 'express';
 import { createClient as createRedisClient } from 'redis';
 import RSS from 'rss';
-import { fetchTweets } from './twitter';
+import { getTweetsForUsername } from './twitter';
 
 const redis = createRedisClient({ url: process.env.REDIS_URL });
 redis.on('error', console.error);
@@ -14,10 +14,15 @@ redis.connect().then(() => {
 
   app.get('/:username', async (req, res) => {
     try {
-      const result = await fetchTweets(redis as any, req.params.username);
+      const result = await getTweetsForUsername({
+        redis: redis as any,
+        username: req.params.username
+      });
+
       res.json(result);
     } catch (err) {
       console.error(err);
+
       res.status(500).json({
         ok: false,
         error: (err as any).message ?? 'Unknown error',
@@ -34,7 +39,11 @@ redis.connect().then(() => {
     let result;
 
     try {
-      result = await fetchTweets(redis as any, username);
+      result = await getTweetsForUsername({
+        redis: redis as any,
+        username,
+      });
+
     } catch (err) {
       console.error(err);
       res.status(500).send((err as any).message ?? 'Unknown error');
