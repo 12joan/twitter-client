@@ -19,22 +19,21 @@ redis.connect().then(() => {
 
     try {
       result = await getTweetsForUsername({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         redis: redis as any,
         username: req.params.username,
       });
-
     } catch (err) {
       console.error(err);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       res.status(500).send((err as any).message ?? 'Unknown error');
       return;
     }
 
     if (!result.ok) {
-      res.status(
-        result.error === 'user-id-does-not-exist-error'
-          ? 404
-          : 500
-      ).send(result.error);
+      res
+        .status(result.error === 'user-id-does-not-exist-error' ? 404 : 500)
+        .send(result.error);
       return;
     }
 
@@ -56,8 +55,8 @@ redis.connect().then(() => {
       feed_url: req.protocol + '://' + req.get('host') + req.originalUrl,
       site_url: `https://twitter.com/${username}`,
       custom_namespaces: {
-        atom: 'http://www.w3.org/2005/Atom'
-      }
+        atom: 'http://www.w3.org/2005/Atom',
+      },
     });
 
     for (const tweet of tweets) {
@@ -65,20 +64,19 @@ redis.connect().then(() => {
       const url = `https://twitter.com/${username}/status/${id}`;
       const date = tweet.legacy.created_at;
       const text = tweet.legacy.full_text;
-      const mediaUrls = tweet.legacy.entities.media?.map((media) => media.media_url_https) ?? [];
+      const mediaUrls =
+        tweet.legacy.entities.media?.map((media) => media.media_url_https) ??
+        [];
 
       feed.item({
-        title: flavour === 'slack'
-          ? url
-          : text,
+        title: flavour === 'slack' ? url : text,
         url: url,
         date,
         custom_elements: [{ 'dc:creator': username }],
         description: [
           text,
-          ...mediaUrls.map((url: string) => flavour === 'slack'
-            ? url
-            : `<img src="${url}" />`
+          ...mediaUrls.map((url: string) =>
+            flavour === 'slack' ? url : `<img src="${url}" />`
           ),
         ].join('\n'),
       });

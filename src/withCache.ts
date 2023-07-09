@@ -21,7 +21,7 @@ export const withCache = async <T, U>(
     invalidateOnError = false,
     shouldInvalidateOnResult = () => false,
   }: WithCacheOptions<T, U>,
-  callback: (value: T) => Promise<U>,
+  callback: (value: T) => Promise<U>
 ): Promise<U> => {
   const prefixedKey = GLOBAL_CACHE_PREFIX + key;
 
@@ -40,12 +40,16 @@ export const withCache = async <T, U>(
         throw err;
       }
 
-      console.log(`${friendlyLabel}: Cached value resulted in error, fetching new value`);
+      console.log(
+        `${friendlyLabel}: Cached value resulted in error, fetching new value`
+      );
     }
 
     if (result) {
       if (shouldInvalidateOnResult(result)) {
-        console.log(`${friendlyLabel}: Cached value resulted in an invalid result, fetching new value`);
+        console.log(
+          `${friendlyLabel}: Cached value resulted in an invalid result, fetching new value`
+        );
       } else {
         return result;
       }

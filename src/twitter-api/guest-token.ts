@@ -12,12 +12,12 @@ export const fetchGuestToken = async ({
   accessToken,
 }: FetchGuestTokenOptions): Promise<TEither<string, TGuestTokenError>> => {
   try {
-    const { guest_token: guestToken } = await fetch(GUEST_TOKEN_API, {
+    const { guest_token: guestToken } = (await fetch(GUEST_TOKEN_API, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
       },
-    }).then((res) => res.json()) as TGuestTokenResponse;
+    }).then((res) => res.json())) as TGuestTokenResponse;
 
     return { ok: true, data: guestToken };
   } catch (err) {

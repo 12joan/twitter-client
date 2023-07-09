@@ -25,41 +25,49 @@ export interface GetTweetsForUsernameOptions {
 export const getTweetsForUsername = async ({
   redis,
   username,
-}: GetTweetsForUsernameOptions): Promise<TEither<TTweet[], TGetTweetsForUsernameError>> => {
+}: GetTweetsForUsernameOptions): Promise<
+  TEither<TTweet[], TGetTweetsForUsernameError>
+> => {
   const accessToken = getAccessToken();
 
-  return withCache({
-    redis,
-    key: `guest-token-${accessToken}`,
-    friendlyLabel: 'Guest token',
-    producer: () => fetchGuestToken({ accessToken }),
-    invalidateOnError: true,
-    shouldInvalidateOnResult: ({ ok }) => !ok,
-  }, async (guestTokenResult) => {
-    if (!guestTokenResult.ok) {
-      return guestTokenResult;
-    }
-
-    const guestToken = guestTokenResult.data;
-
-    return withCache({
+  return withCache(
+    {
       redis,
-      key: `user-id-${username}`,
-      friendlyLabel: 'User ID',
-      producer: () => fetchUserId({ accessToken, guestToken, username }),
-    }, async (userIdResult) => {
-      if (!userIdResult.ok) {
-        return userIdResult;
-      };
+      key: `guest-token-${accessToken}`,
+      friendlyLabel: 'Guest token',
+      producer: () => fetchGuestToken({ accessToken }),
+      invalidateOnError: true,
+      shouldInvalidateOnResult: ({ ok }) => !ok,
+    },
+    async (guestTokenResult) => {
+      if (!guestTokenResult.ok) {
+        return guestTokenResult;
+      }
 
-      const userId = userIdResult.data;
+      const guestToken = guestTokenResult.data;
 
-      return fetchUserTweets({
-        accessToken,
-        guestToken,
-        userId,
-        username,
-      });
-    });
-  });
+      return withCache(
+        {
+          redis,
+          key: `user-id-${username}`,
+          friendlyLabel: 'User ID',
+          producer: () => fetchUserId({ accessToken, guestToken, username }),
+        },
+        async (userIdResult) => {
+          if (!userIdResult.ok) {
+            return userIdResult;
+          }
+
+          const userId = userIdResult.data;
+
+          return fetchUserTweets({
+            accessToken,
+            guestToken,
+            userId,
+            username,
+          });
+        }
+      );
+    }
+  );
 };

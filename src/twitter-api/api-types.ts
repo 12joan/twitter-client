@@ -17,7 +17,7 @@ export type TUserIdExistsResponse = {
 };
 
 export type TUserIdDoesNotExistResponse = {
-  data: {};
+  data: Record<string, never>;
 };
 
 export type TUserIdResponse =
