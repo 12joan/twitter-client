@@ -6,6 +6,7 @@ import {
   fetchGuestToken,
   fetchUserId,
   fetchUserTweets,
+  TTweet,
   TGuestTokenError,
   TUserIdError,
   TUserTweetsError,
@@ -24,7 +25,7 @@ export interface GetTweetsForUsernameOptions {
 export const getTweetsForUsername = async ({
   redis,
   username,
-}: GetTweetsForUsernameOptions): Promise<TEither<any[], TGetTweetsForUsernameError>> => {
+}: GetTweetsForUsernameOptions): Promise<TEither<TTweet[], TGetTweetsForUsernameError>> => {
   const accessToken = getAccessToken();
 
   return withCache({

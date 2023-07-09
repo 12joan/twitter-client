@@ -2,6 +2,7 @@ import express from 'express';
 import { createClient as createRedisClient } from 'redis';
 import RSS from 'rss';
 import { getTweetsForUsername } from './twitter';
+import { TTweet } from './twitter-api';
 
 const redis = createRedisClient({ url: process.env.REDIS_URL });
 redis.on('error', console.error);
@@ -48,7 +49,7 @@ redis.connect().then(() => {
   app.get('/:username/rss', async (req, res) => {
     const { username } = req.params;
     const { flavour = 'default' } = req.query;
-    const { tweets } = res.locals;
+    const tweets = res.locals.tweets as TTweet[];
 
     const feed = new RSS({
       title: username,
@@ -64,7 +65,7 @@ redis.connect().then(() => {
       const url = `https://twitter.com/${username}/status/${id}`;
       const date = tweet.legacy.created_at;
       const text = tweet.legacy.full_text;
-      const mediaUrls = tweet.legacy.entities.media?.map((media: any) => media.media_url_https) ?? [];
+      const mediaUrls = tweet.legacy.entities.media?.map((media) => media.media_url_https) ?? [];
 
       feed.item({
         title: flavour === 'slack'
