@@ -89,11 +89,11 @@ const fetchUserId = async (
 
 // Defines an interface for caching options
 interface WithCacheOptions<T> {
-redis: RedisClient;                 
-key: string;                       
-friendlyLabel?: string;            
-producer: () => Promise<T>;        
-invalidateOnError?: boolean;       
+  redis: RedisClient;
+  key: string;
+  friendlyLabel?: string;
+  producer: () => Promise<T>;
+  invalidateOnError?: boolean;
 }
 
 // A higher-order function that handles caching of data using a Redis client
