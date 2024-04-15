@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
-    "@types/node": "^18.19.30",
+    "@types/node": "^18.19.31",
     "@types/node-fetch": "^2.6.11",
     "@types/rss": "^0.0.30",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
